@@ -15,7 +15,7 @@ class WritePlan(BaseModel):
     plan_chat_id: str
 
     def run(self, init_description) -> str:
-        rsp = _chat(query=DeepPentestPrompt.write_plan, conversation_id=self.plan_chat_id, kb_name=Configs.kb_config.kb_name, kb_query=init_description)
+        rsp, _ = _chat(query=DeepPentestPrompt.write_plan, conversation_id=self.plan_chat_id, kb_name=Configs.kb_config.kb_name, kb_query=init_description)
 
         match = re.search(r'<json>(.*?)</json>', rsp, re.DOTALL)
         if match:
@@ -23,7 +23,7 @@ class WritePlan(BaseModel):
             return code
 
     def update(self, task_result, success_task, fail_task, init_description) -> str:
-        rsp = _chat(
+        rsp, _ = _chat(
             query=DeepPentestPrompt.update_plan.format(current_task=task_result.instruction,
                                                       init_description=init_description,
                                                       current_code=task_result.code,

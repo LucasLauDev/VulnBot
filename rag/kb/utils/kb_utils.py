@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 from pathlib import Path
 
 import chardet
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.text_splitter import TextSplitter
 from langchain_community.document_loaders import JSONLoader, TextLoader
 from config.config import Configs

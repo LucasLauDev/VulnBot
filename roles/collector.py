@@ -40,6 +40,8 @@ class Collector(Role):
 
     def put_message(self, message):
         super().put_message(self)
+        if self.planner.current_plan is None:
+            return
         if message.current_role_name == RoleType.COLLECTOR.value:
             message.current_role_name = RoleType.SCANNER.value
             message.history_planner_ids.append(self.planner.current_plan.id)

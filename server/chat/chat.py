@@ -103,11 +103,6 @@ def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary
         else:
             query = query[:Configs.llm_config.context_length]
 
-        flag = False
-
-        if conversation_id is not None:
-            flag = True
-
         # Initialize or retrieve conversation ID
         conversation_id = add_conversation_to_db(Configs.llm_config.llm_model_name, conversation_id)
 
@@ -131,7 +126,7 @@ def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary
         elif Configs.llm_config.llm_model == LLMType.OLLAMA:
             client = OllamaChat(config=Configs.llm_config)
         else:
-            return "Unsupported model type"
+            return "Unsupported model type", conversation_id
 
         # Get response from the model
         response_text = client.chat(history)
@@ -140,11 +135,8 @@ def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary
         if summary:
             add_message_to_db(conversation_id, Configs.llm_config.llm_model_name, query, response_text)
 
-        if flag:
-            return response_text
-        else:
-            return response_text, conversation_id
+        return response_text, conversation_id
 
     except Exception as e:
         print(e)
-        return f"**ERROR**: {str(e)}"
+        return f"**ERROR**: {str(e)}", conversation_id

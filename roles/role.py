@@ -31,7 +31,9 @@ class Role(BaseModel):
         return self.previous_summary.get_summary()
 
     def put_message(self, message):
-        add_task_to_plan(self.planner.current_plan.tasks)
+        plan = self.planner.current_plan
+        if plan is not None and getattr(plan, "tasks", None):
+            add_task_to_plan(plan.tasks)
         # To be implemented in each subclass
         pass
 
@@ -83,6 +85,13 @@ class Role(BaseModel):
 
     def run(self, session):
         next_task = self._plan(session)
+        if self.planner.current_plan is None:
+            self.console.print(
+                "Planning did not initialize (database tables missing, LLM error, or init failed). "
+                "Run `python cli.py init` after configuring db_config.yaml, then retry.",
+                style="bold red",
+            )
+            return
         while self.chat_counter < self.max_interactions:
             next_task = self._react(next_task)
             if next_task is None:

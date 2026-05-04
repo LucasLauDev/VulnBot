@@ -1,0 +1,50 @@
+# VulnBot infrastructure: MySQL (db_config.yaml) + Kali SSH (basic_config.yaml kali.*).
+# Start:  docker compose up -d
+# Stop:   docker compose down
+#
+# From the host (or WSL) with VulnBot on the same machine, use:
+#   db_config.yaml  -> host: 127.0.0.1  port: 3306  user/password/database from env below
+#   basic_config.yaml -> kali.hostname: 127.0.0.1  kali.port: 2222  (mapped from container 22)
+#
+# Override defaults by creating a `.env` file beside this compose file (see Docker Compose env docs).
+
+name: vulnbot
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-vulnbot}
+      MYSQL_USER: ${MYSQL_USER:-vulnbot}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-vulnbot123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-vulnbot123}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" || exit 1',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  kali-ssh:
+    build:
+      context: ./docker/kali
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # Match basic_config: use hostname 127.0.0.1 and this port (not 22) when connecting from host.
+      - "${KALI_SSH_PORT:-2222}:22"
+
+volumes:
+  mysql_data:

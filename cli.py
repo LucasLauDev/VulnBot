@@ -1,18 +1,40 @@
+import importlib
+
 import click
 
 from config.config import Configs
-from utils.session import create_tables
-from startup import main as startup_main
-from pentest import main as pentest_main
-from experiment.pentestgpt import main as pentestgpt_main
-from experiment.base import main as base_main
-
 from utils.log_common import build_logger
 
 logger = build_logger()
 
+_LAZY_COMMAND_MODULES = {
+    "start": "startup",
+    "vulnbot": "pentest",
+    "pentestgpt": "experiment.pentestgpt",
+    "base": "experiment.base",
+}
 
-@click.group(help="VulnBot")
+
+class LazyCliGroup(click.Group):
+    """Load heavy subcommands only when invoked so `init` works with minimal imports."""
+
+    def list_commands(self, ctx):
+        commands = set(super().list_commands(ctx))
+        commands.update(_LAZY_COMMAND_MODULES)
+        return sorted(commands)
+
+    def get_command(self, ctx, name):
+        cmd = super().get_command(ctx, name)
+        if cmd is not None:
+            return cmd
+        mod_name = _LAZY_COMMAND_MODULES.get(name)
+        if mod_name is None:
+            return None
+        mod = importlib.import_module(mod_name)
+        return mod.main
+
+
+@click.group(cls=LazyCliGroup, help="VulnBot")
 def main():
     ...
 
@@ -24,20 +46,20 @@ def init():
     Configs.basic_config.make_dirs()
     logger.success("Creating all data directories: Success.")
 
-    create_tables()
-    logger.success("Initializing database: Success.")
-
     Configs.create_all_templates()
     Configs.set_auto_reload(True)
-
     logger.success("Generating default configuration file: Success.")
 
+    try:
+        from utils.session import create_tables
 
-main.add_command(startup_main, "start")
-main.add_command(pentest_main, "vulnbot")
-main.add_command(pentestgpt_main, "pentestgpt")
-main.add_command(base_main, "base")
-
+        create_tables()
+        logger.success("Initializing database: Success.")
+    except Exception as e:
+        logger.warning(
+            f"Database initialization skipped ({e!r}). "
+            "Configuration files were written; set db_config.yaml and run `python cli.py init` again to create tables."
+        )
 
 
 if __name__ == "__main__":

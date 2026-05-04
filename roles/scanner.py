@@ -41,6 +41,8 @@ class Scanner(Role):
 
     def put_message(self, message):
         super().put_message(self)
+        if self.planner.current_plan is None:
+            return
         if message.current_role_name == RoleType.SCANNER.value:
             message.current_role_name = RoleType.EXPLOITER.value
             message.history_planner_ids.append(self.planner.current_plan.id)

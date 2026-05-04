@@ -34,7 +34,7 @@ class Planner(BaseModel):
 
     def update_plan(self, result):
 
-        check_success = _chat(
+        check_success, _ = _chat(
             query=DeepPentestPrompt.check_success.format(result=result),
             conversation_id=self.current_plan.react_chat_id
         )
@@ -72,7 +72,7 @@ class Planner(BaseModel):
             return None
 
         self.current_plan.current_task_sequence = self.current_plan.current_task.sequence
-        next_task = _chat(
+        next_task, _ = _chat(
             query=DeepPentestPrompt.next_task_details.format(todo_task=self.current_plan.current_task.instruction),
             conversation_id=self.current_plan.react_chat_id,
             kb_name=Configs.kb_config.kb_name,
