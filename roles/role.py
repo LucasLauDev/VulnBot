@@ -92,6 +92,13 @@ class Role(BaseModel):
                 style="bold red",
             )
             return
+        if next_task is None:
+            self.console.print(
+                "No task to run: plan is empty, could not be parsed, or all tasks are done. "
+                "Check logs and LLM/API configuration.",
+                style="bold red",
+            )
+            return
         while self.chat_counter < self.max_interactions:
             next_task = self._react(next_task)
             if next_task is None:

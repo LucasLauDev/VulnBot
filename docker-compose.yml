@@ -42,6 +42,8 @@ services:
       context: ./docker/kali
       dockerfile: Dockerfile
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       # Match basic_config: use hostname 127.0.0.1 and this port (not 22) when connecting from host.
       - "${KALI_SSH_PORT:-2222}:22"

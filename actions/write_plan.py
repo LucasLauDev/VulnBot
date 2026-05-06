@@ -16,11 +16,31 @@ class WritePlan(BaseModel):
 
     def run(self, init_description) -> str:
         rsp, _ = _chat(query=DeepPentestPrompt.write_plan, conversation_id=self.plan_chat_id, kb_name=Configs.kb_config.kb_name, kb_query=init_description)
+        extracted = self._extract_plan_json(rsp)
+        if extracted is None:
+            preview = (rsp or "")[:800]
+            raise ValueError(
+                "Plan model response had no parseable <json>...</json> task list. "
+                f"Preview: {preview!r}"
+            )
+        return extracted
 
-        match = re.search(r'<json>(.*?)</json>', rsp, re.DOTALL)
+    @staticmethod
+    def _extract_plan_json(rsp: str | None) -> str | None:
+        if rsp is None:
+            return None
+        match = re.search(r"<json>(.*?)</json>", rsp, re.DOTALL)
         if match:
-            code = match.group(1)
-            return code
+            return match.group(1).strip()
+        fence = re.search(r"```(?:json)?\s*(\[[\s\S]*?])\s*```", rsp, re.IGNORECASE)
+        if fence:
+            return fence.group(1).strip()
+        stripped = rsp.strip()
+        if stripped.startswith("["):
+            end = stripped.rfind("]")
+            if end != -1:
+                return stripped[: end + 1]
+        return None
 
     def update(self, task_result, success_task, fail_task, init_description) -> str:
         rsp, _ = _chat(
@@ -37,13 +57,12 @@ class WritePlan(BaseModel):
         if rsp == "":
             return rsp
 
-        match = re.search(r'<json>(.*?)</json>', rsp, re.DOTALL)
-        if match:
-            code = match.group(1)
-            return code
+        return self._extract_plan_json(rsp)
 
 
 def parse_tasks(response: str, current_plan: Plan):
+    if response is None or (isinstance(response, str) and not str(response).strip()):
+        raise ValueError("Plan JSON string is empty or missing")
     response = json.loads(response)
 
     tasks = import_tasks_from_json(current_plan.id, response)
@@ -59,6 +78,9 @@ def preprocess_json_string(json_str):
     return json_str
 
 def merge_tasks(response: str, current_plan: Plan):
+
+    if response is None or not str(response).strip():
+        raise ValueError("merge_tasks: empty plan update JSON")
 
     # Preprocess the input JSON string
     processed_response = preprocess_json_string(response)

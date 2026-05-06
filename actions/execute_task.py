@@ -69,8 +69,23 @@ class ExecuteTask(BaseModel):
         thought = self.parse_response()
         self.code = thought
         logger.info(f"Running {thought}")
-        # 执行命令列表
-        shell = ShellManager.get_instance().get_shell()
+        if not thought:
+            return (
+                "No shell command in model output (expected <execute>...</execute> blocks). "
+                "The step was skipped."
+            )
+        try:
+            shell = ShellManager.get_instance().get_shell()
+        except Exception as e:
+            logger.exception("SSH connection failed")
+            mgr = ShellManager.get_instance()
+            mgr.close()
+            return (
+                f"SSH to Kali failed ({e!s}). "
+                f"Start `docker compose up -d` in the VulnBot folder and set basic_config.yaml "
+                f"kali hostname/port to match (e.g. 127.0.0.1:2222). "
+                f"From inside Kali, use host.docker.internal to reach services published on the host."
+            )
         try:
             SMB_PROMPTS = [
                 'command not found',
@@ -124,6 +139,8 @@ class ExecuteTask(BaseModel):
                         result += new_output + '\n'
 
         except Exception as e:
-            print(e)
-            result = "Before sending a remote command you need to set-up an SSH connection."
+            logger.exception("Remote shell command failed")
+            mgr = ShellManager.get_instance()
+            mgr.close()
+            result = f"Remote command failed: {e!s}. SSH session was reset; retry or fix Kali connectivity."
         return result

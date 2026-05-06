@@ -1,4 +1,5 @@
 from typing import Optional
+import json
 
 from pydantic import BaseModel
 
@@ -22,11 +23,19 @@ class Planner(BaseModel):
             next_task = self.next_task_details()
             return next_task
 
-        response = WritePlan(plan_chat_id=self.current_plan.plan_chat_id).run(self.init_description)
+        try:
+            response = WritePlan(plan_chat_id=self.current_plan.plan_chat_id).run(self.init_description)
+        except ValueError as e:
+            logger.error(f"plan generation failed: {e}")
+            return None
 
         logger.info(f"plan: {response}")
 
-        self.current_plan = parse_tasks(response, self.current_plan)
+        try:
+            self.current_plan = parse_tasks(response, self.current_plan)
+        except (TypeError, ValueError) as e:
+            logger.error(f"plan parse failed: {e}")
+            return None
 
         next_task = self.next_task_details()
 
@@ -60,7 +69,11 @@ class Planner(BaseModel):
         if updated_response == "" or updated_response is None:
             return None
 
-        merge_tasks(updated_response, self.current_plan)
+        try:
+            merge_tasks(updated_response, self.current_plan)
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            logger.error(f"updated plan parse/merge failed: {e}")
+            return None
 
         next_task = self.next_task_details()
 
