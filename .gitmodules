@@ -1,0 +1,6 @@
+[submodule "benchmark/xbow-val-benchmark"]
+	path = benchmark/xbow-val-benchmark
+	url = https://github.com/LucasLauDev/xbow-validation-benchmarks.git
+[submodule "benchmark/vulhub"]
+	path = benchmark/vulhub
+	url = https://github.com/LucasLauDev/vulhub.git
