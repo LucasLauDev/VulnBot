@@ -1,0 +1,8 @@
+# The benchmark runner itself only uses the Python standard library.
+# It launches `vulnbot_driver.py` as a subprocess against the project root,
+# which in turn imports VulnBot's normal dependencies (see
+# ../../requirements.txt). Install those once and the runner will work:
+#
+#     pip install -r ../../requirements.txt
+#
+# (No extra packages are required exclusively for this runner.)
