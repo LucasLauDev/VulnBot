@@ -1,0 +1,1 @@
+run_id,timestamp,challenge_id,category,difficulty,target_host,target_port,startup_ok,target_reachable_pre,session_completed,num_phases_executed,SSR_i,TRR_i,SCR_i,PQS_i,EES_i,MRS_i,HIC_i,commands_generated,commands_executed,commands_valid,commands_relevant,commands_evidence,errors,errors_recovered,OFS_run,fatal_error,log_file,raw_file
