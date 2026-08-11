@@ -1,0 +1,18 @@
+metric,value,unit,threshold,pass
+System Startup Success Rate (SSR),0.0,%,95.0,FAIL
+Target Reachability Success Rate (TRR),100.0,%,95.0,PASS
+Session Completion Rate (SCR),0.0,%,90.0,FAIL
+Planning Quality Score (PQS),0.0,%,80.0,FAIL
+Command Validity Rate (CVR),0.0,%,90.0,FAIL
+Command Relevance Rate (CRR),0.0,%,85.0,FAIL
+Evidence Extraction Score (EES),0.0,%,90.0,FAIL
+Memory Retention Score (MRS),0.0,%,80.0,FAIL
+Error Recovery Rate (ERR),,%,80.0,PASS
+Human Intervention Count (mean) (HIC_mean),0.0,count,0.5,PASS
+Overall Functionality Score (OFS),30.0,%,85.0,FAIL
+
+Overall verdict,FAIL,,,
+Runs (N),1,,,
+Commands generated,0,,,
+Commands executed,0,,,
+Errors observed,0,,,

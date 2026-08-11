@@ -162,6 +162,11 @@ def verify_reachable(probe_host: str, port: int, attempts=10, delay=2.0) -> bool
 def load_dataset(only=None):
     with open(DATASET, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
+    # The dataset ships the column as `difficulty_level`; the harness refers to
+    # it as `difficulty`. Normalise so both names work without editing rows.
+    for r in rows:
+        if "difficulty" not in r or not r.get("difficulty"):
+            r["difficulty"] = r.get("difficulty_level", "")
     if only:
         wanted = {x.strip() for x in only.split(",")}
         rows = [r for r in rows if r["challenge_id"] in wanted]
@@ -253,9 +258,19 @@ def main():
                 "--target-host", args.vulnbot_target_host, "--target-port", str(port),
                 "--max-interactions", str(args.max_interactions), "--out", raw_path,
             ]
-            proc = run_cmd(cmd, cwd=PROJECT_ROOT, timeout=3600)
-            logf.write("\n----- runner stdout -----\n" + proc.stdout)
-            logf.write("\n----- runner stderr -----\n" + proc.stderr)
+            try:
+                proc = run_cmd(cmd, cwd=PROJECT_ROOT, timeout=3600)
+                logf.write("\n----- runner stdout -----\n" + proc.stdout)
+                logf.write("\n----- runner stderr -----\n" + proc.stderr)
+            except subprocess.TimeoutExpired:
+                # A single slow session must not abort the whole sweep: record it
+                # as a failed (timed-out) run and continue with the next challenge.
+                log("  ! VulnBot session exceeded timeout - recording as failed run")
+                _record_failed(run_id, ch, args, port, True, log_path, raw_path,
+                               run_scores, per_run_records, "session_timeout")
+                stop_container(bench_dir)
+                logf.close()
+                continue
 
             # Step 7: snapshot VulnBot's own log next to the run log
             if os.path.exists(vulnbot_log):
