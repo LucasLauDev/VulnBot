@@ -20,6 +20,26 @@ from utils.log_common import build_logger
 
 logger = build_logger()
 
+_LLM_SEP = "=" * 72
+
+
+def _log_llm_request(model_name: str, history: List) -> None:
+    """Print the full LLM request (message history) to stdout.
+
+    The output is captured by the benchmark runner and written to the
+    per-benchmark .log file alongside all other stdout.
+    """
+    print(f"\n{_LLM_SEP}", flush=True)
+    print(f"  [LLM-REQUEST]  model={model_name}  messages={len(history)}", flush=True)
+    print(_LLM_SEP, flush=True)
+    for i, msg in enumerate(history, 1):
+        role = msg.get("role", "?").upper()
+        content = msg.get("content", "")
+        print(f"\n  -- Message {i}/{len(history)} | role={role} --", flush=True)
+        print(content, flush=True)
+    print(f"\n{_LLM_SEP}\n", flush=True)
+
+
 
 class OpenAIChat(ABC):
     def __init__(self, config):
@@ -30,14 +50,16 @@ class OpenAIChat(ABC):
     @retry(
         stop=stop_after_attempt(3),  # Stop after 3 attempts
     )
-    def chat(self, history: List) -> str:
+    def chat(self, history: List, think: bool = False) -> str:
         try:
+            _log_llm_request(self.model_name, history)
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=history,
                 temperature=self.config.temperature,
             )
             ans = response.choices[0].message.content
+            print(ans)
             return ans
         except (httpx.HTTPStatusError, httpx.ReadTimeout,
                     httpx.ConnectTimeout, ConnectionError) as e:
@@ -48,6 +70,18 @@ class OpenAIChat(ABC):
         except Exception as e:
             return f"**ERROR**: {str(e)}"
 
+# def _log_llm_response(answer: str, thinking: str | None = None) -> None:
+#     """Print the full LLM response (and optional reasoning trace) to stdout."""
+#     print(f"\n{_LLM_SEP}", flush=True)
+#     print("  [LLM-RESPONSE]", flush=True)
+#     print(_LLM_SEP, flush=True)
+#     if thinking:
+#         print("\n  -- <think> (reasoning trace) --", flush=True)
+#         print(thinking, flush=True)
+#         print("\n  -- </think> --\n", flush=True)
+#     print("  -- Final Answer --", flush=True)
+#     print(answer, flush=True)
+#     print(f"\n{_LLM_SEP}\n", flush=True)
 
 class OllamaChat(ABC):
     def __init__(self, config):
@@ -55,25 +89,65 @@ class OllamaChat(ABC):
         self.client = Client(host=self.config.base_url)
         self.model_name = self.config.llm_model_name
 
-    def chat(self, history: List[dict]) -> str:
+    def chat(self, history: List[dict], think: bool = False) -> str:
 
         try:
-            options = {
-                "temperature": self.config.temperature,
-            }
-            response = self.client.chat(
+            _log_llm_request(self.model_name, history)
+            stream = self.client.chat(
                 model=self.model_name,
                 messages=history,
-                options=options,
-                keep_alive=-1
+                options={
+                    "temperature": self.config.temperature,
+                },
+                think=think,
+                keep_alive=-1,
+                stream=True
             )
-            ans = response["message"]["content"]
-            return ans
+
+            in_thinking = False
+            thinking_chunks: list[str] = []
+            answer_chunks: list[str] = []
+            print(f"\n{_LLM_SEP}", flush=True)
+            print("  [LLM-RESPONSE]", flush=True)
+            print(_LLM_SEP, flush=True)
+
+            for chunk in stream:
+                if chunk.message.thinking and not in_thinking:
+                    in_thinking = True
+                    print("\n  -- <think> (reasoning trace) --", flush=True)
+
+                if chunk.message.thinking:
+                    thinking_chunks.append(chunk.message.thinking)
+                    print(chunk.message.thinking, end='', flush=True)
+                elif chunk.message.content:
+                    answer_chunks.append(chunk.message.content)
+                    if in_thinking:
+                        in_thinking = False
+                        print("\n  -- </think> --\n", flush=True)
+                        print("  -- Final Answer --", flush=True)
+                    print(chunk.message.content, end='', flush=True)
+
+            print(f"\n{_LLM_SEP}\n", flush=True)
+            # thinking = ''.join(thinking_chunks)
+            answer = ''.join(answer_chunks)
+
+            # for chunk in stream:
+            #     msg = chunk.message if hasattr(chunk, "message") else chunk.get("message", {})
+            #     t = getattr(msg, "thinking", None) or (msg.get("thinking") if isinstance(msg, dict) else None)
+            #     c = getattr(msg, "content", None) or (msg.get("content") if isinstance(msg, dict) else None)
+            #     if t:
+            #         thinking_parts.append(t)
+            #     if c:
+            #         content_parts.append(c)
+
+            # thinking = "".join(thinking_parts) or None
+            # ans = "".join(content_parts)
+            return answer
         except httpx.HTTPStatusError as e:
             return f"**ERROR**: {str(e)}"
 
 
-def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary=True):
+def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary=True, think=False):
     try:
         if Configs.basic_config.enable_rag and kb_name is not None:
             docs = asyncio.run(run_in_threadpool(search_docs,
@@ -129,7 +203,7 @@ def _chat(query: str, kb_name=None, conversation_id=None, kb_query=None, summary
             return "Unsupported model type", conversation_id
 
         # Get response from the model
-        response_text = client.chat(history)
+        response_text = client.chat(history, think)
 
         # Save both query and response to the database
         if summary:

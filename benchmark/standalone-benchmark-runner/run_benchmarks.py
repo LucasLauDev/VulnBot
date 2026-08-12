@@ -48,6 +48,18 @@ DRIVER_PATH = HERE / "vulnbot_driver.py"
 PROJECT_ROOT = HERE.parents[1]
 
 
+def _default_python() -> str:
+    """Prefer the project .venv interpreter so driver subprocesses get the
+    correct packages.  Falls back to sys.executable if .venv is absent."""
+    for candidate in [
+        PROJECT_ROOT / ".venv" / "Scripts" / "python.exe",   # Windows
+        PROJECT_ROOT / ".venv" / "bin" / "python",            # Linux / macOS
+    ]:
+        if candidate.exists():
+            return str(candidate)
+    return sys.executable
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Run VulnBot against benchmark suites (Vulhub / XBOW).",
@@ -91,9 +103,9 @@ def parse_args() -> argparse.Namespace:
                    help="Directory for run logs and summaries (default: ./logs).")
     p.add_argument("--skip-infra-check", action="store_true",
                    help="Skip the kali-ssh container presence check.")
-    p.add_argument("--python", type=str, default=sys.executable,
+    p.add_argument("--python", type=str, default=_default_python(),
                    help="Python interpreter used to run vulnbot_driver.py "
-                        "(default: current interpreter).")
+                        "(default: .venv/Scripts/python.exe if present, else current interpreter).")
 
     flag_mode = p.add_mutually_exclusive_group()
     flag_mode.add_argument("--any-flag", action="store_true",

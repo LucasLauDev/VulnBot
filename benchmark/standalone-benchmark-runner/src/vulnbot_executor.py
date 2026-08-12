@@ -58,10 +58,12 @@ class VulnBotExecutor:
     ) -> str:
         """Render a single-line task description for VulnBot."""
         lines: list[str] = []
-        kali_target = (
+        raw_target = (
             target_url
             or (f"http://host.docker.internal:{ports[0]}" if ports else "")
         )
+        kali_target = raw_target.replace("127.0.0.1", "host.docker.internal").replace("localhost", "host.docker.internal")
+
         lines.append(f"Benchmark: {bench_id} — {bench_name} ({kind}).")
         if cve:
             lines.append(f"CVE references: {', '.join(cve)}.")
@@ -70,13 +72,13 @@ class VulnBotExecutor:
         if kali_target:
             lines.append(
                 "Target reachable from Kali container at "
-                f"{kali_target} (use host.docker.internal from inside Kali). "
+                f"{kali_target} (use host.docker.internal or container IP/name on the docker network; do NOT use 127.0.0.1/localhost to target the victim container). "
                 f"Host-mapped ports: {ports or 'none — use docker network'}."
             )
         else:
             lines.append(
-                "Target containers are running on the docker default network; "
-                "use docker DNS names from Kali if needed."
+                "Target containers are running on the docker container network; "
+                "use docker DNS names or container IPs from Kali if needed."
             )
         if expected_flag:
             lines.append(

@@ -74,6 +74,8 @@ class DockerManager:
                 "message": f"up -d failed:\n{up.stderr or up.stdout}",
             }
 
+        self.connect_containers_to_vulnbot_net(benchmark_path)
+
         ports = self.get_exposed_ports(benchmark_path)
         if not ports:
             return {
@@ -96,6 +98,30 @@ class DockerManager:
             "ports": ports,
             "message": f"Benchmark started, host ports: {ports}",
         }
+
+    def connect_containers_to_vulnbot_net(self, benchmark_path: Path) -> None:
+        """Best-effort attach of benchmark containers to the vulnbot-net Docker network."""
+        try:
+            ps = subprocess.run(
+                ["docker", "compose", "ps", "-q"],
+                cwd=str(benchmark_path),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if ps.returncode == 0 and ps.stdout.strip():
+                for container_id in ps.stdout.strip().splitlines():
+                    cid = container_id.strip()
+                    if cid:
+                        subprocess.run(
+                            ["docker", "network", "connect", "vulnbot-net", cid],
+                            capture_output=True,
+                            text=True,
+                            timeout=15,
+                        )
+        except Exception:
+            pass
+
 
     def stop_benchmark(self, benchmark_path: Path) -> dict:
         """Tear down the benchmark stack and remove volumes."""

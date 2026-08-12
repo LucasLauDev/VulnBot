@@ -4,7 +4,8 @@ FROM kalilinux/kali-rolling
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssh-server nmap curl \
+    && apt-get install -y kali-linux-headless openssh-server libcap2-bin \
+    && setcap -r /usr/lib/nmap/nmap \
     && mkdir -p /var/run/sshd \
     && echo 'root:kali123' | chpasswd \
     && printf '%s\n' 'PermitRootLogin yes' 'PasswordAuthentication yes' \

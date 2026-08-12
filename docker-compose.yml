@@ -36,6 +36,8 @@ services:
       timeout: 5s
       retries: 15
       start_period: 30s
+    networks:
+      - vulnbot-net
 
   kali-ssh:
     build:
@@ -47,6 +49,14 @@ services:
     ports:
       # Match basic_config: use hostname 127.0.0.1 and this port (not 22) when connecting from host.
       - "${KALI_SSH_PORT:-2222}:22"
+    networks:
+      - vulnbot-net
+
+networks:
+  vulnbot-net:
+    name: vulnbot-net
+    driver: bridge
 
 volumes:
   mysql_data:
+

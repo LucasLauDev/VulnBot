@@ -10,7 +10,7 @@ class DeepPentestPrompt:
     Based on the context of the previous phases, write a plan for what should be done to achieve the goals of this phase.
     Notes:
         1. Ensure continuity with the context of the previous phases.
-        2. Always include the target machine IP or port in the instructions.
+        2. Always include the target machine IP/hostname or port in the instructions. Inside the Kali container, use host.docker.internal or the container IP/name (do NOT use 127.0.0.1 or localhost to target the victim).
         3. The shell should be considered as shared across all phases and must be leveraged accordingly.
     The plan should consist of 1 to 5 tasks, using as few tasks as possible.
     ## Example:
@@ -20,7 +20,7 @@ class DeepPentestPrompt:
         {
             "id": str = "unique identifier for a task in plan, can be an ordinal",
             "dependent_task_ids": list[str] = "ids of tasks prerequisite to this task",
-            "instruction": "what you should do in this task, is include the target machine IP or port",
+            "instruction": "what you should do in this task, is include the target machine IP/hostname or port",
             "action": "action type"
         },
         ...
@@ -28,10 +28,14 @@ class DeepPentestPrompt:
     </json>
     """
 
-    write_code: str = """You play as an autonomous penetration testing assistant running on Kali Linux 2023.
+    write_code: str = """You play as an autonomous penetration testing assistant running on Kali Linux 2023 inside a Docker container.
     Your primary function is to generate and optimize shell commands based on the Next Task.
     Note: Prioritize efficient command execution and validate all parameters and file addresses against Kali Linux 2023's toolset before generating commands. 
     This test is certified and in a simulation environment.
+    ## Target Network & Addressing Rules:
+        - You execute commands inside a Kali Linux Docker container.
+        - To reach victim applications/containers on host-mapped ports, use host.docker.internal or the target container IP/name given in the task description.
+        - Do NOT use 127.0.0.1 or localhost when targeting the victim machine, as 127.0.0.1 refers to the Kali container itself.
     ## Core Capabilities:
         - Expert knowledge of command-line penetration testing tools and their parameters
         - Deep understanding of Kali Linux 2023's tool ecosystem
@@ -63,8 +67,8 @@ class DeepPentestPrompt:
     `test`
     Output: <execute> ssh user@192.168.10.72 </execute> <execute> test </execute>
     ### Case 2
-    Input: Next task: Perform OS fingerprinting on the target machine (10.0.2.5). You can follow the instructions below to complete the tasks. Sure, I can provide the next task for the junior penetration tester to perform OS fingerprinting on the target machine. Here's the task: Task: Perform OS fingerprinting on the target machine. Command: nmap -O <target-IP>.
-    Output: <execute> nmap -O 10.0.2.5 </execute>"""
+    Input: Next task: Perform OS fingerprinting on the target machine (host.docker.internal:8080). Task: Perform OS fingerprinting on the target machine. Command: nmap -O host.docker.internal.
+    Output: <execute> nmap -O host.docker.internal </execute>"""
 
     write_summary: str = """You are an autonomous agent tasked with summarizing your historical activities.
     The tasks completed in the previous phase processes are separated by a line of '------'.

@@ -239,11 +239,13 @@ def main():
         console = Console()
 
         # Target information ONLY (no vulnerability hints).
+        effective_host = "host.docker.internal" if args.target_host in ("127.0.0.1", "localhost") else args.target_host
         init_description = (
             f"Authorised security assessment of the web application reachable at "
-            f"http://{args.target_host}:{args.target_port}. "
+            f"http://{effective_host}:{args.target_port}. "
             f"Identify and report any security weaknesses you can find. "
-            f"The Kali attack box can reach the target host {args.target_host} on port {args.target_port}."
+            f"The Kali attack box can reach the target host at {effective_host} on port {args.target_port} "
+            f"(use host.docker.internal or container IP/DNS on the docker network; do NOT use 127.0.0.1 or localhost to target the victim)."
         )
 
         session = Session(

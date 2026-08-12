@@ -15,7 +15,8 @@ class WritePlan(BaseModel):
     plan_chat_id: str
 
     def run(self, init_description) -> str:
-        rsp, _ = _chat(query=DeepPentestPrompt.write_plan, conversation_id=self.plan_chat_id, kb_name=Configs.kb_config.kb_name, kb_query=init_description)
+        # LLM REQUEST #1: GENERATE PLAN
+        rsp, _ = _chat(query=DeepPentestPrompt.write_plan, conversation_id=self.plan_chat_id, kb_name=Configs.kb_config.kb_name, kb_query=init_description, think=True)
         extracted = self._extract_plan_json(rsp)
         if extracted is None:
             preview = (rsp or "")[:800]
@@ -43,6 +44,7 @@ class WritePlan(BaseModel):
         return None
 
     def update(self, task_result, success_task, fail_task, init_description) -> str:
+        # LLM REQUEST #5: PLAN UPDATE
         rsp, _ = _chat(
             query=DeepPentestPrompt.update_plan.format(current_task=task_result.instruction,
                                                       init_description=init_description,
@@ -50,9 +52,10 @@ class WritePlan(BaseModel):
                                                       task_result=task_result.result,
                                                       success_task=success_task,
                                                       fail_task=fail_task),
-            conversation_id=self.plan_chat_id,
+            conversation_id=self.plan_chat_id,  
             kb_name=Configs.kb_config.kb_name,
-            kb_query=task_result.instruction
+            kb_query=task_result.instruction,
+            think=True
         )
         if rsp == "":
             return rsp

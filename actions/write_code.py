@@ -17,6 +17,7 @@ class WriteCode(BaseModel):
     def run(self):
 
         logger.info(f"next_task: {self.next_task}")
+        # LLM REQUEST #3: GENERATE EXECUTABLE CODE
         response, _ = _chat(query=DeepPentestPrompt.write_code.format(next_task=self.next_task))
         logger.info(f"LLM Response: {response}")
 
