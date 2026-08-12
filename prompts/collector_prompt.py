@@ -3,7 +3,7 @@ import dataclasses
 
 @dataclasses.dataclass
 class CollectorPrompt:
-    init_plan_prompt: str = """You are a Reconnaissance Assistant running on Kali Linux 2023. 
+    init_plan_prompt: str = """You are a Reconnaissance Assistant running on Kali Linux 2026. 
     Your role is to assist testers in the cybersecurity training process. 
     It includes three stages: reconnaissance, vulnerability scanning, and exploitation. **You focus on the reconnaissance phase**.
     ## Overall Target:
@@ -15,7 +15,7 @@ class CollectorPrompt:
     
     Reply with yes if you understood."""
 
-    init_reasoning_prompt: str = """You are a Reconnaissance Assistant running on Kali Linux 2023. 
+    init_reasoning_prompt: str = """You are a Reconnaissance Assistant running on Kali Linux 2026. 
     Your role is to assist testers in the cybersecurity training process.
     You will receive two types of input:
         1. New Task: When you receive a New Task, break it down into clear, actionable steps for the tester to follow.

@@ -245,7 +245,7 @@ USER INPUT
 │                                                              │
 │ User Message:                                               │
 │   "You play as an autonomous penetration testing assistant  │
-│    running on Kali Linux 2023...                            │
+│    running on Kali Linux 2026...                            │
 │    [full write_code prompt]                                 │
 │                                                              │
 │    **Next Task**: Task: Perform a comprehensive port scan   │
@@ -1040,18 +1040,18 @@ Command: nmap -T5 -p- 192.168.1.100
 Purpose: This initial reconnaissance scan will identify..."""
 
 query = f"""
-You play as an autonomous penetration testing assistant running on Kali Linux 2023.
+You play as an autonomous penetration testing assistant running on Kali Linux 2026.
 Your primary function is to generate and optimize shell commands based on the Next Task.
 
 ## Core Capabilities:
 - Expert knowledge of command-line penetration testing tools
-- Deep understanding of Kali Linux 2023's tool ecosystem
+- Deep understanding of Kali Linux 2026's tool ecosystem
 - Parameter validation and optimization
 
 ## Command Generation Rules:
 1. All commands must be wrapped in <execute></execute> tags
 2. Multiple commands should be separated into individual <execute> blocks
-3. Commands must use parameters available in Kali Linux 2023
+3. Commands must use parameters available in Kali Linux 2026
 4. Optimize commands for execution speed
 5. Cannot add command
 

@@ -29,16 +29,25 @@ def _log_llm_request(model_name: str, history: List) -> None:
     The output is captured by the benchmark runner and written to the
     per-benchmark .log file alongside all other stdout.
     """
-    print(f"\n{_LLM_SEP}", flush=True)
-    print(f"  [LLM-REQUEST]  model={model_name}  messages={len(history)}", flush=True)
-    print(_LLM_SEP, flush=True)
-    for i, msg in enumerate(history, 1):
-        role = msg.get("role", "?").upper()
-        content = msg.get("content", "")
-        print(f"\n  -- Message {i}/{len(history)} | role={role} --", flush=True)
-        print(content, flush=True)
-    print(f"\n{_LLM_SEP}\n", flush=True)
+    # print(f"\n{_LLM_SEP}", flush=True)
+    # print(f"  [LLM-REQUEST]  model={model_name}  messages={len(history)}", flush=True)
+    # print(_LLM_SEP, flush=True)
+    # for i, msg in enumerate(history, 1):
+    #     role = msg.get("role", "?").upper()
+    #     content = msg.get("content", "")
+    #     print(f"\n  -- Message {i}/{len(history)} | role={role} --", flush=True)
+    #     print(content, flush=True)
+    # print(f"\n{_LLM_SEP}\n", flush=True)
 
+    print(f"\n{_LLM_SEP}", flush=True)
+    print(f"  [LLM-REQUEST]  model={model_name} ", flush=True)
+    print(_LLM_SEP, flush=True)
+    latest_msg = history[-1]
+    role = latest_msg.get("role", "?").upper()
+    content = latest_msg.get("content", "")
+    print(f"\n  -- Message {len(history)}/{len(history)} | role={role} --", flush=True)
+    print(content, flush=True)
+    print(f"\n{_LLM_SEP}\n", flush=True)
 
 
 class OpenAIChat(ABC):

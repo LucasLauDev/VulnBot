@@ -18,7 +18,7 @@ class ExtractCode(BaseModel):
 
     def run(self):
 
-        extract_code = """You play as an autonomous penetration testing assistant running on Kali Linux 2023.
+        extract_code = """You play as an autonomous penetration testing assistant running on Kali Linux 2026.
         You are proficient in using the command line for all penetration testing tools and have an in-depth understanding of their parameters.
         Your task is to generate shell commands based on the Next Task, and wrap them in <execute></execute> tags.
         ## Next Task:

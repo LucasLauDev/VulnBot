@@ -10,7 +10,7 @@ class Collector(Role):
     name: str = "Information Collection"
 
     goal: str = (
-        "Perform a full scan of the target to identify all open ports and services."
+        "Perform a full scan of the target to identify all services and version information on the target port only."
     )
 
     tools: str = (

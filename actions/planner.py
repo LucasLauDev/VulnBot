@@ -92,7 +92,7 @@ class Planner(BaseModel):
             conversation_id=self.current_plan.react_chat_id,
             kb_name=Configs.kb_config.kb_name,
             kb_query=self.current_plan.current_task.instruction,
-            think=True
+            think=False
         )
         return next_task
 

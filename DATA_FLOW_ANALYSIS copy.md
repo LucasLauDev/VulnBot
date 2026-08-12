@@ -245,7 +245,7 @@ USER INPUT
 │                                                              │
 │ User Message:                                               │
 │   "You play as an autonomous penetration testing assistant  │
-│    running on Kali Linux 2023...                            │
+│    running on Kali Linux 2026...                            │
 │    [full write_code prompt]                                 │
 │                                                              │
 │    **Next Task**: Task: Perform a comprehensive port scan   │

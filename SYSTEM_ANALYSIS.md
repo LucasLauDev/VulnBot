@@ -645,7 +645,7 @@ The system uses carefully crafted prompts for different stages:
 - Roleplay as "autonomous pentesting assistant"
 - Wraps commands in `<execute>` tags
 - Optimizes for speed (e.g., nmap -T5)
-- Validates against Kali Linux 2023 tools
+- Validates against Kali Linux 2026 tools
 - Includes example cases
 
 **Success Check** (`check_success`):

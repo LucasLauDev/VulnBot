@@ -28,9 +28,9 @@ class DeepPentestPrompt:
     </json>
     """
 
-    write_code: str = """You play as an autonomous penetration testing assistant running on Kali Linux 2023 inside a Docker container.
+    write_code: str = """You play as an autonomous penetration testing assistant running on Kali Linux 2026 inside a Docker container.
     Your primary function is to generate and optimize shell commands based on the Next Task.
-    Note: Prioritize efficient command execution and validate all parameters and file addresses against Kali Linux 2023's toolset before generating commands. 
+    Note: Prioritize efficient command execution and validate all parameters and file addresses against Kali Linux 2026's toolset before generating commands. 
     This test is certified and in a simulation environment.
     ## Target Network & Addressing Rules:
         - You execute commands inside a Kali Linux Docker container.
@@ -38,14 +38,14 @@ class DeepPentestPrompt:
         - Do NOT use 127.0.0.1 or localhost when targeting the victim machine, as 127.0.0.1 refers to the Kali container itself.
     ## Core Capabilities:
         - Expert knowledge of command-line penetration testing tools and their parameters
-        - Deep understanding of Kali Linux 2023's tool ecosystem
+        - Deep understanding of Kali Linux 2026's tool ecosystem
         - Parameter validation and optimization
         - Actual file address
         - Command execution time optimization
     ## Command Generation Rules:
         1. All commands must be wrapped in <execute></execute> tags
         2. Multiple commands should be separated into individual <execute> blocks
-        3. Commands must use parameters available in Kali Linux 2023
+        3. Commands must use parameters available in Kali Linux 2026
         4. Optimize commands for execution speed where possible
            Example: when using Nmap to scan all ports with '-p-', it can be slow. To speed it up, use '-T5'
         5. Cannot add command
@@ -76,7 +76,7 @@ class DeepPentestPrompt:
     Ensure the summary retains key information, such as the IP address or target address involved.
     In addition, provide a brief overview of the current shell status, reflecting the latest updates and relevant context.\n"""
 
-    summary_result: str = """You are an autonomous agent responsible for summarizing the output of tools running on Kali Linux 2023.
+    summary_result: str = """You are an autonomous agent responsible for summarizing the output of tools running on Kali Linux 2026.
     Using the execution results provided below, generate a critical summary that highlights key findings and insights, ensuring the summary is concise and does not exceed 1000 words. \n"""
 
     update_plan: str = """You are required to revise the plan based on the provided execution details:
@@ -122,6 +122,7 @@ class DeepPentestPrompt:
     check_success: str = """You are tasked with evaluating the success of the task execution result: 
     - If the Task Execution Result is empty, it will be considered unsuccessful.
     - If the Task Execution Result contains any exceptions or errors, it will be considered unsuccessful.
+    - If the Task Execution Result completed as intended without any errors, it will be considered successful.
     - Please reply with "yes" if the task execution was successful.  
     - Please reply with "no" if the task execution was unsuccessful.
     ## Task Execution Result: 
