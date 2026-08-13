@@ -108,8 +108,17 @@ class VulnBotExecutor:
         output_file: Path,
         save_name: str = "",
         no_save: bool = True,
+        command_logger=None,
     ) -> dict:
-        """Run the driver and stream its output. Returns a dict with status."""
+        """Run the driver and stream its output. Returns a dict with status.
+
+        Parameters
+        ----------
+        command_logger:
+            Optional IncrementalCommandLogger instance. When provided, each
+            streamed line is fed to logger.feed_line() which detects command
+            blocks and writes the JSON analysis file in real-time.
+        """
         with tempfile.NamedTemporaryFile(
             "w", suffix=".txt", delete=False, encoding="utf-8"
         ) as tmp:
@@ -158,7 +167,7 @@ class VulnBotExecutor:
             )
             _emit(f"PID={process.pid}", prefix="  ")
 
-            stream_task = asyncio.create_task(self._stream(process, output_file))
+            stream_task = asyncio.create_task(self._stream(process, output_file, command_logger))
             try:
                 output_lines = await asyncio.wait_for(
                     stream_task, timeout=timeout_seconds
@@ -222,8 +231,13 @@ class VulnBotExecutor:
         self,
         process: asyncio.subprocess.Process,
         output_file: Path,
+        command_logger=None,
     ) -> list[str]:
-        """Stream stdout to log + console; return raw payload lines."""
+        """Stream stdout to log + console; return raw payload lines.
+
+        If command_logger is provided, each line is fed to it so the
+        incremental JSON analysis is written in real-time.
+        """
         lines: list[str] = []
         with open(output_file, "w", encoding="utf-8") as f:
             while True:
@@ -235,6 +249,13 @@ class VulnBotExecutor:
                 f.write(f"{ts} {line}\n")
                 f.flush()
                 lines.append(line)
+
+                # Feed to real-time command logger (never disrupts streaming)
+                if command_logger is not None:
+                    try:
+                        command_logger.feed_line(line)
+                    except Exception:
+                        pass
 
                 if not self.verbose:
                     if any(m in line for m in self.HIGHLIGHT_MARKERS):

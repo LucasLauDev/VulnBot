@@ -119,11 +119,13 @@ class DeepPentestPrompt:
     - Ensure the commands are compatible with the simulated environment and context provided.
     - Use professional, technical language for clarity."""
 
-    check_success: str = """You are tasked with evaluating the success of the task execution result: 
+    check_success: str = """You are tasked with evaluating the success of the task execution result based on the task's intended objective:
+    - Determine if the task's core objective was met (e.g., finding a vulnerability, successfully exploiting a target, or gathering the targeted information).
     - If the Task Execution Result is empty, it will be considered unsuccessful.
-    - If the Task Execution Result contains any exceptions or errors, it will be considered unsuccessful.
-    - If the Task Execution Result completed as intended without any errors, it will be considered successful.
-    - Please reply with "yes" if the task execution was successful.  
-    - Please reply with "no" if the task execution was unsuccessful.
+    - If the task failed to achieve its intended objective (e.g., the target was not vulnerable, expected resources were not found, or the exploit did not work), it will be considered unsuccessful, even if the commands executed without runtime errors.
+    - If the execution resulted in unexpected tool failures or exceptions that prevented the task from completing, it will be considered unsuccessful.
+    - If the task successfully achieved its intended objective, it will be considered successful.
+    - Please reply with "yes" if the task execution successfully achieved its objective.  
+    - Please reply with "no" if the task execution was unsuccessful in achieving its objective.
     ## Task Execution Result: 
     {result}"""

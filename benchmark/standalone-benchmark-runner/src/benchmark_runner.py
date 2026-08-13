@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .benchmark_loader import load_benchmarks
+from .command_analyzer import IncrementalCommandLogger, analyze_benchmark_commands
 from .docker_manager import DockerManager, ensure_kali_running
 from .models import BenchmarkConfig, BenchmarkInfo, BenchmarkResult
 from .output_parser import OutputParser
@@ -219,6 +220,20 @@ class BenchmarkRunner:
             )
 
             output_file = self.reporter.get_benchmark_log_path(info.id)
+            analysis_json_path = output_file.with_suffix(".commands.json")
+
+            # Create real-time command logger — writes JSON after each command block
+            cmd_logger = IncrementalCommandLogger(
+                output_json_path=analysis_json_path,
+                benchmark_id=info.id,
+                project_root=self.executor.project_root,
+                benchmark_description=description,
+            )
+            print(
+                "  [CMD-ANALYSIS] Real-time logger active -> " + str(analysis_json_path),
+                flush=True,
+            )
+
             exec_result = await self.executor.execute(
                 description=description,
                 max_interactions=self.config.max_interactions,
@@ -226,7 +241,38 @@ class BenchmarkRunner:
                 output_file=output_file,
                 save_name=f"bench_{info.id.replace('/', '_')}_{int(start.timestamp())}",
                 no_save=True,
+                command_logger=cmd_logger,
             )
+
+            # ------------------------------------------------------------------
+            # FALLBACK: batch LLM analysis if real-time logger captured nothing
+            # (e.g. process died before any Execute Result block was seen)
+            # ------------------------------------------------------------------
+            if cmd_logger.records:
+                _emit(
+                    "[CMD-ANALYSIS] " + str(len(cmd_logger.records)) + " record(s) written real-time -> " + str(analysis_json_path),
+                    prefix="  ",
+                )
+            else:
+                _phase("Command analysis (post-execution fallback)")
+                t0_analysis = datetime.now()
+                try:
+                    analyze_benchmark_commands(
+                        benchmark_id=info.id,
+                        log_lines=exec_result["output_lines"],
+                        output_json_path=analysis_json_path,
+                        project_root=self.executor.project_root,
+                        benchmark_description=description,
+                    )
+                except Exception as _analysis_exc:
+                    _emit(
+                        f"[CMD-ANALYSIS] warn: fallback analysis failed: {_analysis_exc!r}",
+                        prefix="  ",
+                    )
+                _phase_done(
+                    "Command analysis",
+                    (datetime.now() - t0_analysis).total_seconds(),
+                )
 
             _phase("Output parsing & flag evaluation")
             t0 = datetime.now()
